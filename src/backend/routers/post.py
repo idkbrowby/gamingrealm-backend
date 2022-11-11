@@ -68,8 +68,26 @@ async def create_post(
     return inserted_post
 
 
-@router.get("/{id}")
-async def get_post(id: str) -> dict:
+@router.get("/search")
+async def search_posts(
+    q: str = Query(),
+) -> Page[Post]:
+    """Gets posts based on specified query.
+
+    Matching is done using Full Text Search
+    """
+    words = q.split()
+    search_phrase = " & ".join(words)
+    query = (
+        'SELECT * from "Post" WHERE to_tsvector("title") @@ to_tsquery($1)'
+        ' ORDER BY "created_at" LIMIT 20'
+    )
+    posts = await Post.prisma().query_raw(query, search_phrase)
+    return Page(data=posts, count=len(posts), cursor_id=None)
+
+
+@router.get("/{id}", response_model=PostDetails)
+async def get_post(id: str) -> PostDetails:
     """Get full details of a specific post."""
     post = await Post.prisma().find_first(
         where={"id": id, "deleted": False}, include={"tags": True, "media": True, "author": True}
@@ -88,7 +106,7 @@ async def get_post(id: str) -> dict:
         by=["post_id"], avg={"value": True}, having={"post_id": id}
     )
     avg_rating = round(avg_rating_query[0]["_avg"]["value"])  # type: ignore
-    return PostDetails(post=post, comments=comments, avg_rating=avg_rating).dict()
+    return PostDetails(post=post, comments=comments, avg_rating=avg_rating)
 
 
 @authz_router.delete("/{id}")
