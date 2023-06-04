@@ -20,7 +20,7 @@ repos:
         name: Black
         description: Formats python files with Black.
         language: system
-        entry: black .
+        entry: poetry run task format
         require_serial: true
         pass_filenames: false
 
@@ -28,6 +28,6 @@ repos:
         name: Flake8
         description: Lint using flake8.
         language: system
-        entry: flake8
+        entry: poetry run flake8
         require_serial: true
         pass_filenames: false
