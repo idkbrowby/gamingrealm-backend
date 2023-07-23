@@ -149,8 +149,6 @@ async def create_comment(
     try:
         comment = await PostComment.prisma().create(
             data={
-                "author_id": str(user_id),
-                "post_id": post_id,
                 "content": comment_text,
                 "author": {"connect": {"id": str(user_id)}},
                 "post": {"connect": {"id": post_id}},
@@ -184,6 +182,7 @@ async def get_comments(
 
 @authz_router.delete("/{post_id}/comments/{comment_id}")
 async def delete_comment(
+    post_id: str,
     comment_id: str,
     user_id: UUID | None = Header(default=None),
 ) -> MessageResponse:
