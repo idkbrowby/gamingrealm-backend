@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Backend for Gaming Realm - a project built for Avishkar 2022"
 authors = ["Anand Krishna <anand2312@proton.me>", "Vivek Ashokkumar <vivekashok1221@gmail.com>", "Gautham Krishna Jayasurya <gautham.jayasurya@gmail.com>"]
 readme = "README.md"
+license = "MIT"
 packages = [{include = "backend", from = "src"}]
 
 [tool.poetry.dependencies]
