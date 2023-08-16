@@ -13,7 +13,7 @@ RUN poetry install --no-root --without dev
 
 RUN mkdir ./prisma/
 
-COPY prisma/schema.prisma  ./
+COPY prisma/schema.prisma  ./prisma/
 
 COPY prisma/prisma_partial_types.py ./prisma/
 
