@@ -12,7 +12,6 @@ from src.backend.paginate_db import Page, paginate
 from src.backend.storage import _upload_to_storage
 
 router = APIRouter(prefix="/post", tags=["post"])
-authz_router = APIRouter(dependencies=[Depends(is_authorized)])
 
 
 @router.get("/")
@@ -45,12 +44,12 @@ async def get_posts(
     )
 
 
-@authz_router.post("/create", response_model=CreatePostResponse)
+@router.post("/create", response_model=CreatePostResponse)
 async def create_post(
+    user_id: Annotated[UUID, Depends(is_authorized)],
     title: Annotated[str, Form()],
     text_content: Annotated[str | None, Form()] = None,
     images: list[UploadFile] | None = None,
-    user_id: UUID | None = Header(default=None),
 ) -> dict[str, Any]:
     """Create a new post."""
     try:
@@ -117,10 +116,10 @@ async def get_post(id: str) -> PostDetails:
     return PostDetails(post=post, comments=comments, avg_rating=avg_rating)
 
 
-@authz_router.delete("/{id}")
+@router.delete("/{id}")
 async def delete_post(
+    user_id: Annotated[UUID, Depends(is_authorized)],
     id: str,
-    user_id: UUID | None = Header(default=None),
 ) -> MessageResponse:
     """Delete a post."""
     try:
@@ -139,11 +138,11 @@ async def delete_post(
     return MessageResponse(message="Post deleted.")
 
 
-@authz_router.post("/{post_id}/comments")
+@router.post("/{post_id}/comments")
 async def create_comment(
+    user_id: Annotated[UUID, Depends(is_authorized)],
     post_id: str,
     comment_text: str = Body(),
-    user_id: UUID | None = Header(default=None),
 ) -> PostComment:
     """Create a comment on the specified post."""
     try:
@@ -180,11 +179,11 @@ async def get_comments(
     )
 
 
-@authz_router.delete("/{post_id}/comments/{comment_id}")
+@router.delete("/{post_id}/comments/{comment_id}")
 async def delete_comment(
+    user_id: Annotated[UUID, Depends(is_authorized)],
     post_id: str,
     comment_id: str,
-    user_id: UUID | None = Header(default=None),
 ) -> MessageResponse:
     """Endpoint to delete a comment."""
     try:
@@ -197,6 +196,3 @@ async def delete_comment(
     if not deleted_comment:
         raise HTTPException(404, "The current user has not created a comment with the provided ID.")
     return MessageResponse(message="Comment deleted.")
-
-
-router.include_router(authz_router)
