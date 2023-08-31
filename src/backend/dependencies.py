@@ -17,7 +17,7 @@ async def is_authorized(
     session_id: UUID = Header(alias="session-id"),
     sessions: AbstractSessionStorage = Depends(get_sessions),
 ) -> UUID:
-    """The headers must include user-id and session-id."""
+    """The headers must session-id."""
     logger.trace(f"Attempting authorization with session id: {session_id}")
 
     session: Session | None = await sessions.get_session(session_id)
