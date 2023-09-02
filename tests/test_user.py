@@ -117,21 +117,11 @@ async def test_get_user_while_logged_in(
 # test_x_authz_route_y is for testing the is_authorized dependency
 async def test_authz_route_no_headers(client: AsyncClient):
     res = await client.post(f"/user/{uuid4()}/follow")
-    assert res.status_code == 400
+    assert res.status_code == 422
 
 
 async def test_authz_route_invalid_session(client: AsyncClient):
-    headers = {"session-id": str(uuid4()), "user-id": str(uuid4())}
-    res = await client.post(f"/user/{uuid4()}/follow", headers=headers)
-    assert res.status_code == 440
-
-
-async def test_authz_route_valid_but_wrong_session(
-    client: AsyncClient, logged_in_user: tuple[User, str]
-):
-    user, session = logged_in_user
-    headers = {"session-id": session, "user-id": str(uuid4())}
-    res = await client.post(f"/user/{uuid4()}/follow", headers=headers)
+    res = await client.post(f"/user/{uuid4()}/follow", headers={"session-id": str(uuid4())})
     assert res.status_code == 403
 
 
@@ -165,8 +155,7 @@ async def test_follow_user(
     client: AsyncClient, db: Prisma, user2: User, logged_in_user: tuple[User, str]
 ):
     follower, session = logged_in_user
-    headers = {"session-id": session, "user-id": follower.id}
-    res = await client.post(f"/user/{user2.id}/follow", headers=headers)
+    res = await client.post(f"/user/{user2.id}/follow", headers={"session-id": session})
     assert res.status_code == 200
     get_followers_res = await client.get(f"/user/{user2.id}/followers")
     follower_ids = [f["user_id"] for f in get_followers_res.json()]
@@ -179,13 +168,11 @@ async def test_follow_user(
 
 async def test_follow_non_existent_user(client: AsyncClient, logged_in_user: tuple[User, str]):
     follower, session = logged_in_user
-    headers = {"session-id": session, "user-id": follower.id}
-    res = await client.post(f"/user/{uuid4()}/follow", headers=headers)
+    res = await client.post(f"/user/{uuid4()}/follow", headers={"session-id": session})
     assert res.status_code == 404
 
 
 async def test_follow_self(client: AsyncClient, logged_in_user: tuple[User, str]):
     follower, session = logged_in_user
-    headers = {"session-id": session, "user-id": follower.id}
-    res = await client.post(f"/user/{follower.id}/follow", headers=headers)
+    res = await client.post(f"/user/{follower.id}/follow", headers={"session-id": session})
     assert res.status_code == 400

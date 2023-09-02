@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException
@@ -19,7 +20,6 @@ from src.backend.models import (
 from src.backend.paginate_db import paginate
 
 router = APIRouter(prefix="/user", tags=["user"])
-authz_router = APIRouter(dependencies=[Depends(is_authorized)])
 COOKIE_MAX_AGE = 30 * 24 * 60 * 60  # 2592000 seconds (30 days)
 
 
@@ -119,8 +119,9 @@ async def login(
     return response
 
 
-@authz_router.post("/logout")
+@router.post("/logout")
 async def logout(
+    user_id: Annotated[UUID, Depends(is_authorized)],
     session_id: UUID = Header(default=None),
     sessions: AbstractSessionStorage = Depends(get_sessions),
 ) -> MessageResponse:
@@ -190,10 +191,10 @@ async def get_user_followers(uid: str) -> list[Follower]:
     return followers
 
 
-@authz_router.post("/{uid}/follow")
+@router.post("/{uid}/follow")
 async def follow_user(
+    user_id: Annotated[UUID, Depends(is_authorized)],
     uid: str,
-    user_id: UUID | None = Header(default=None),
 ) -> Follower:
     """Add the currently logged in user as a follower to user <uid>."""
     if uid == str(user_id):
@@ -216,10 +217,10 @@ async def follow_user(
     return follow_record
 
 
-@authz_router.post("/{uid}/unfollow")
+@router.post("/{uid}/unfollow")
 async def unfollow_user(
+    user_id: Annotated[UUID, Depends(is_authorized)],
     uid: str,
-    user_id: UUID | None = Header(default=None),
 ) -> Follower:
     """Make the currently logged in user unfollow user <uid>."""
     if uid == user_id:
@@ -233,6 +234,3 @@ async def unfollow_user(
     if not deleted_record:
         raise HTTPException(status_code=422, detail=f"User {user_id} wasn't following {uid}")
     return deleted_record
-
-
-router.include_router(authz_router)
