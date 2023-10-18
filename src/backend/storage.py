@@ -3,6 +3,7 @@ import posixpath
 import uuid
 from typing import Literal
 
+import httpx
 from dotenv import load_dotenv
 from fastapi import HTTPException, UploadFile
 from storage3 import AsyncStorageClient, create_client
@@ -36,8 +37,9 @@ def _validate_file(file: UploadFile) -> Literal[True]:
 
 async def _upload_to_storage(files: list[UploadFile], destination: str) -> list[str]:
     for file in files:
-        assert file.filename is not None
-        _validate_file(file)
+        if file.filename is None:
+            raise HTTPException(status_code=400, detail="No filename provided.")
+            _validate_file(file)
 
     urls = []
     filenames = set()
@@ -59,6 +61,11 @@ async def _upload_to_storage(files: list[UploadFile], destination: str) -> list[
             error_details = e.args[0]
             raise HTTPException(
                 status_code=error_details["statusCode"], detail=error_details["message"]
+            )
+        except httpx.ConnectError:
+            raise HTTPException(
+                status_code=503,
+                detail="Post could not be uploaded as object storage is not reachable.",
             )
         else:
             _, path = res.json()["Key"].split("/", 1)
