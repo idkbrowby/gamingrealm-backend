@@ -39,7 +39,7 @@ async def get_posts(
         take,
         cursor,
         where=filters,
-        include={"tags": True, "author": True},
+        include={"tags": True, "author": True, "media": True},
         order={"created_at": "desc"},
     )
 
