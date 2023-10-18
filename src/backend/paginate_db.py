@@ -41,7 +41,9 @@ async def paginate(
     """
     if cursor_id:
         logger.info(f"Making page query: {model}, page size={page_size}")
-        data = await model.prisma().find_many(take=page_size, cursor={"id": cursor_id}, **kwargs)
+        data = await model.prisma().find_many(
+            take=page_size, cursor={"id": cursor_id}, skip=1, **kwargs
+        )
     else:
         data = await model.prisma().find_many(take=page_size, **kwargs)
     if f:
