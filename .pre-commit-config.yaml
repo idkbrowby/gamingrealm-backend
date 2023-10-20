@@ -29,6 +29,6 @@ repos:
         name: Black
         description: Formats python files with Black.
         language: system
-        entry: black .
+        entry: poetry run black .
         require_serial: true
         pass_filenames: false
