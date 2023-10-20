@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from typing import Annotated
 
 from pydantic import BaseModel, EmailStr, Field, validator
 
@@ -8,6 +9,12 @@ from prisma.partials import UserProfile
 from src.backend.paginate_db import Page
 
 USERNAME_RE = re.compile("^[A-Za-z0-9_-]*$")
+
+
+class PostRatingBody(BaseModel):
+    """Represents a rating for a post. The rating should be an integer in the range [0,5]."""
+
+    rating: Annotated[int, Field(ge=0, le=5)]
 
 
 class UserInLogin(BaseModel):

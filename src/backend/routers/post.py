@@ -7,7 +7,7 @@ from loguru import logger
 from prisma.errors import PrismaError
 from prisma.models import Post, PostComment, PostMedia, PostRating
 from src.backend.dependencies import is_authorized
-from src.backend.models import CreatePostResponse, MessageResponse, PostDetails
+from src.backend.models import CreatePostResponse, MessageResponse, PostDetails, PostRatingBody
 from src.backend.paginate_db import Page, paginate
 from src.backend.storage import _upload_to_storage
 
@@ -177,6 +177,25 @@ async def get_comments(
         include={"author": True},
         order={"created_at": "desc"},
     )
+
+
+@router.post("/{post_id}/rating")
+async def create_rating(
+    user_id: Annotated[UUID, Depends(is_authorized)], post_id: str, rating: PostRatingBody
+) -> PostRating:
+    """Create a rating on the specified post."""
+    try:
+        rating_record = await PostRating.prisma().upsert(
+            where={"post_id_author_id": {"post_id": post_id, "author_id": str(user_id)}},
+            data={
+                "create": {"post_id": post_id, "author_id": str(user_id), "value": rating.rating},
+                "update": {"value": rating.rating},
+            },
+        )
+    except PrismaError as e:
+        logger.warning(f"Could not create rating: {e}")
+        raise HTTPException(400, "Could not create the rating due to an internal error")
+    return rating_record
 
 
 @router.delete("/{post_id}/comments/{comment_id}")
