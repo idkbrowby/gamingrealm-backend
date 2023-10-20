@@ -47,7 +47,7 @@ async def get_posts(
 @router.post("/create", response_model=CreatePostResponse)
 async def create_post(
     user_id: Annotated[UUID, Depends(is_authorized)],
-    title: Annotated[str, Form()],
+    title: Annotated[str, Form(max_length=50)],
     text_content: Annotated[str | None, Form()] = None,
     images: list[UploadFile] | None = None,
 ) -> dict[str, Any]:
