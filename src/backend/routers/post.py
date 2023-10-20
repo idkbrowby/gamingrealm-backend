@@ -114,7 +114,10 @@ async def get_post(id: str) -> PostDetails:
     avg_rating_query = await PostRating.prisma().group_by(
         by=["post_id"], avg={"value": True}, having={"post_id": id}
     )
-    avg_rating = round(avg_rating_query[0]["_avg"]["value"])  # type: ignore
+    if len(avg_rating_query) > 0:
+        avg_rating = round(avg_rating_query[0]["_avg"]["value"])  # type: ignore
+    else:
+        avg_rating = 0
     return PostDetails(post=post, comments=comments, avg_rating=avg_rating)
 
 
