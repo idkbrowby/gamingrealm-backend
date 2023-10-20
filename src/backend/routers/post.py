@@ -73,6 +73,8 @@ async def create_post(
             data=[{"post_id": inserted_post.id, "object_url": url} for url in urls]
         )
         response["urls"] = urls
+    else:
+        response["urls"] = []
     return response
 
 
