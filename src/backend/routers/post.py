@@ -160,7 +160,7 @@ async def create_comment(
         )
     except PrismaError as e:
         logger.warning(f"Could not create comment: {e}")
-        raise HTTPException(400, "Could not create the comment due to an internal error")
+        raise HTTPException(500, "Could not create the comment due to an internal error")
     return comment
 
 
@@ -199,7 +199,7 @@ async def create_rating(
         )
     except PrismaError as e:
         logger.warning(f"Could not create rating: {e}")
-        raise HTTPException(400, "Could not create the rating due to an internal error")
+        raise HTTPException(500, "Could not create the rating due to an internal error")
     return rating_record
 
 
