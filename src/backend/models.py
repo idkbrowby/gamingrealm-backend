@@ -84,8 +84,7 @@ class CreatePostResponse(BaseModel):
     id: str
     author_id: str
     title: str
-    text_content: str
+    text_content: str | None
     created_at: datetime
     updated_at: datetime
-    deleted: bool
     urls: list[str]
