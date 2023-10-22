@@ -96,11 +96,12 @@ async def search_posts(
     return Page(data=posts, count=len(posts), cursor_id=None)
 
 
-@router.get("/{id}")
-async def get_post(id: str) -> PostDetails:
+@router.get("/{post_id}")
+async def get_post(post_id: str) -> PostDetails:
     """Get full details of a specific post."""
     post = await Post.prisma().find_first(
-        where={"id": id, "deleted": False}, include={"tags": True, "media": True, "author": True}
+        where={"id": post_id, "deleted": False},
+        include={"tags": True, "media": True, "author": True},
     )
     if not post:
         raise HTTPException(404, "Post not found")
@@ -112,7 +113,7 @@ async def get_post(id: str) -> PostDetails:
         order={"created_at": "desc"},
     )
     avg_rating_query = await PostRating.prisma().group_by(
-        by=["post_id"], avg={"value": True}, having={"post_id": id}
+        by=["post_id"], avg={"value": True}, having={"post_id": post_id}
     )
     if len(avg_rating_query) > 0:
         avg_rating = round(avg_rating_query[0]["_avg"]["value"])  # type: ignore
@@ -121,10 +122,10 @@ async def get_post(id: str) -> PostDetails:
     return PostDetails(post=post, comments=comments, avg_rating=avg_rating)
 
 
-@router.delete("/{id}")
+@router.delete("/{post_id}")
 async def delete_post(
     user_id: Annotated[UUID, Depends(is_authorized)],
-    id: str,
+    post_id: str,
 ) -> MessageResponse:
     """Delete a post."""
     try:
@@ -133,7 +134,7 @@ async def delete_post(
         # uniquely identify a row
         # and we need to filter by author_id as well
         deleted_post = await Post.prisma().update_many(
-            data={"deleted": True}, where={"id": id, "author_id": str(user_id)}
+            data={"deleted": True}, where={"id": post_id, "author_id": str(user_id)}
         )
     except PrismaError as e:
         logger.warning(f"Could not delete post: {e}")
