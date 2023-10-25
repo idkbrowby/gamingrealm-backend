@@ -25,6 +25,8 @@ storage_client: AsyncStorageClient = create_client(
 
 
 def _validate_file(file: UploadFile) -> Literal[True]:
+    if file.filename is None:
+        raise HTTPException(status_code=400, detail="No filename provided.")
     if file.size is not None and file.size > MAX_SIZE:
         raise HTTPException(
             status_code=413,
@@ -37,9 +39,7 @@ def _validate_file(file: UploadFile) -> Literal[True]:
 
 async def _upload_to_storage(files: list[UploadFile], destination: str) -> list[str]:
     for file in files:
-        if file.filename is None:
-            raise HTTPException(status_code=400, detail="No filename provided.")
-            _validate_file(file)
+        _validate_file(file)
 
     urls = []
     filenames = set()
