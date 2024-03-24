@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Body, Depends, Form, Header, HTTPException, Query, UploadFile
 from loguru import logger
 
-from prisma.errors import PrismaError
+from prisma.errors import ForeignKeyViolationError, PrismaError
 from prisma.models import Post, PostComment, PostMedia, PostRating
 from src.backend.dependencies import is_authorized
 from src.backend.models import CreatePostResponse, MessageResponse, PostDetails, PostRatingBody
@@ -108,7 +108,7 @@ async def get_post(post_id: str) -> PostDetails:
     comments = await paginate(
         PostComment,
         page_size=20,
-        where={"post_id": id},
+        where={"post_id": post_id},
         include={"author": True},
         order={"created_at": "desc"},
     )
@@ -198,6 +198,8 @@ async def create_rating(
                 "update": {"value": rating.rating},
             },
         )
+    except ForeignKeyViolationError:
+        raise HTTPException(404, "Post not found")
     except PrismaError as e:
         logger.warning(f"Could not create rating: {e}")
         raise HTTPException(500, "Could not create the rating due to an internal error")
